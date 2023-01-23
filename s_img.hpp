@@ -35,6 +35,7 @@ namespace sm {
         int32_t width;
         int32_t height;
         vector<SImgPixelComponent> pixelArray;
+        SImgPixelComponent* coord_map;
     };
     
 

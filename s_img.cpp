@@ -16,6 +16,9 @@ sm::SImgData sm::S_Img::to_simg(string filename)
     }
     dat.width = externalImg.cols;
     dat.height = externalImg.rows;
+
+    dat.coord_map = new SImgPixelComponent[dat.width * dat.height];
+
     for (int i = 0; i < externalImg.rows; i++)
     {
         for (int j = 0; j < externalImg.cols; j++)
@@ -28,6 +31,7 @@ sm::SImgData sm::S_Img::to_simg(string filename)
             pixel.g = bgrPixels[1];
             pixel.r = bgrPixels[2];
             dat.pixelArray.push_back(pixel);
+            dat.coord_map[(pixel.y * pixel.x) + pixel.x] = pixel;
         }
     }
     return dat;
@@ -64,6 +68,7 @@ vector<sm::SImgPixelComponent> sm::S_Img::compare_simg(sm::SImgData simgOne, sm:
     {
         SImgPixelComponent pix = simgOne.pixelArray[i];
         SImgPixelComponent pixWith = get_pixel(simgTwo, pix.x, pix.y);
+        //cout << i << '\r' << flush;
         if (!error())
         {
             if (!( pix.r == pixWith.r && pix.g == pixWith.g && pix.b == pixWith.b )) 
@@ -109,6 +114,8 @@ sm::SImgData sm::S_Img::load_simg(iostream &infile)
     infile.read((char*)&dat.width, 4);
     infile.read((char*)&dat.height, 4);
 
+    dat.coord_map = new SImgPixelComponent[dat.width*dat.height];
+
     int32_t x = -1;
     int32_t y = -1;
 
@@ -143,6 +150,7 @@ sm::SImgData sm::S_Img::load_simg(iostream &infile)
         pixel.b = b;
 
         dat.pixelArray.push_back(pixel);
+        dat.coord_map[(pixel.y * pixel.x) + pixel.x] = pixel;
     }
 
     return dat;
@@ -256,14 +264,22 @@ bool sm::S_Img::set_pixel(SImgData &simg, int32_t x, int32_t y, int8_t r, int8_t
 sm::SImgPixelComponent sm::S_Img::get_pixel(SImgData simg, int32_t x, int32_t y)
 {
     SImgPixelComponent empty;
-    for (int i = 0; i < simg.pixelArray.size(); i++)
+    // for (vector<SImgPixelComponent>::iterator it = simg.pixelArray.begin(); it != simg.pixelArray.end(); ++it)
+    // {
+    //     if (it->x == x && it->y == y)
+    //     {
+    //         return *it;
+    //     }
+    // }
+
+    if (x <= simg.width && y <= simg.height)
     {
-        SImgPixelComponent pix = simg.pixelArray[i];
-        if (pix.x == x && pix.y == y)
+        if (&simg.coord_map[(y*x)+x] != 0)
         {
-            return pix;
+            return simg.coord_map[(y*x)+x];
         }
     }
+
     setError("Cannot find pixel");
     return empty;
 }
@@ -273,6 +289,9 @@ sm::SImgData sm::S_Img::merge_simg(SImgData simgOne, SImgData simgTwo)
     SImgData mergedImage;
     mergedImage.width = simgOne.width;
     mergedImage.height = simgOne.height;
+
+    mergedImage.coord_map = new SImgPixelComponent[mergedImage.width*mergedImage.height];
+    
     for (int i = 0; i < simgOne.pixelArray.size(); i++)
     {
         SImgPixelComponent pix = simgOne.pixelArray[i];
@@ -280,9 +299,13 @@ sm::SImgData sm::S_Img::merge_simg(SImgData simgOne, SImgData simgTwo)
         if (error())
         {
             getError(); // clear the error
+            mergedImage.coord_map[(pix.y * pix.x) + pix.x] = pix;
+            //mergedImage.coord_map[pix.x][pix.y] = make_shared<SImgPixelComponent>(pix);
             mergedImage.pixelArray.push_back(pix);
         } else
         {
+            //mergedImage.coord_map[secondPix.x][secondPix.y] = make_shared<SImgPixelComponent>(secondPix);
+            mergedImage.coord_map[(pix.y * pix.x) + pix.x] = secondPix;
             mergedImage.pixelArray.push_back(secondPix);
         }
     }

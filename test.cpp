@@ -61,8 +61,17 @@ void createVideo()
     // Add frames
     sm::SImgData frameOne = imageProcess.to_simg("Sample.png");
     sm::SImgData frameTwo = imageProcess.to_simg("Sample2.png");
-    videoProcess.add_frame(video, frameOne);
-    videoProcess.add_frame(video, frameTwo);
+    
+    for (int i = 0; i < 30; i++)
+    {
+        cout << "Processed " << i << " frames\r" << flush;
+        videoProcess.add_frame(video, frameOne);
+    }
+
+    for (int i = 0; i < 30; i++)
+    {
+        videoProcess.add_frame(video, frameTwo);
+    }
 
     // Save the video
     videoProcess.save_svid(video, "Video.svid");
@@ -96,6 +105,6 @@ int main()
 {
     //simpleLoadSaveImage();
     //mergeImages();
-    //createVideo();
-    loadVideo();
+    createVideo();
+    //loadVideo();
 }
